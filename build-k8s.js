@@ -12,15 +12,18 @@ async function main() {
   });
   await Promise.all(dockerBuildPromises);
 
-  await run('kubectl', ['apply', '-f', './k8s/*.yml']);
+  // await run('kubectl', ['apply', '-f', './k8s/*.yml']);
 };
 
 function run(command, args, tag = "") {
   const fg = ansiColorFromHash(tag);
+  const prefix = `${fg}[${tag}] stdout${C.Reset}:`;
+  const ErrPrefix = `${C.BgRed}stderr${C.Reset}: `;
+
   return new Promise((resolve, reject) => {
     const cmd = spawn(command, args);
-    cmd.stdout.on('data', (data)=>{ console.log(`${fg}[${tag}] stdout${C.Reset}: ${data.toString('utf-8').trim()}`)});
-    cmd.stderr.on('data', (data)=>{ console.log(`${C.BgRed}stderr${C.Reset}: ${data.toString('utf-8').trim()}`)});
+    cmd.stdout.on('data', (data)=>{ console.log(`${prefix}${prettyLog(data, prefix)}`)});
+    cmd.stderr.on('data', (data)=>{ console.log(`${ErrPrefix}${prettyLog(data, ErrPrefix)}`)});
     cmd.on('close', (code)=>{resolve(code)});
   });
 }
@@ -34,6 +37,9 @@ function discoverTargets(path, target){
   return dockerDirs;
 }
 
+function prettyLog(data, prefix){
+  return data.toString('utf-8').trim().split('\n').join(`\n${prefix}`).trim();
+}
 
 function ansiColorFromHash(text, background=false){
   const hash = crypto.createHash('md5').update(text).digest('hex');
