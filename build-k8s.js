@@ -1,18 +1,21 @@
 #! /usr/bin/env node
-const { spawn, spawnSync } = require('child_process');
+const { spawn, spawnSync, exec } = require('child_process');
 const crypto = require('crypto');
 const fs = require('fs');
 
 async function main() {
-  const targets = discoverTargets('./', 'Dockerfile');
-  console.log(`Discovered Targets:${targets}`);
+  const targets = discoverTargets('.', 'Dockerfile');
+  console.log(`Discovered Targets: ${targets}`);
 
   const dockerBuildPromises = targets.map((t) => {
-    run('docker', ['build', '-t', `${t}:latest`, `./${t}`], t)
+    return run('docker', ['build', '-t', `${t}:latest`, `./${t}`], t)
   });
+
+  console.log(dockerBuildPromises);
   await Promise.all(dockerBuildPromises);
 
   await run('kubectl', ['apply', '-f', './k8s/*.yml']);
+
 };
 
 function run(command, args, tag = "") {
@@ -21,10 +24,14 @@ function run(command, args, tag = "") {
   const ErrPrefix = `${C.BgRed}stderr${C.Reset}: `;
 
   return new Promise((resolve, reject) => {
+
+    const done = (code, signal) =>  { resolve(code) };
     const cmd = spawn(command, args);
+    cmd.on('error', reject);
+    cmd.on('close', done);
+    cmd.on('exit', done);
     cmd.stdout.on('data', (data)=>{ console.log(`${prefix}${prettyLog(data, prefix)}`)});
     cmd.stderr.on('data', (data)=>{ console.log(`${ErrPrefix}${prettyLog(data, ErrPrefix)}`)});
-    cmd.on('close', (code)=>{resolve(code)});
   });
 }
 
