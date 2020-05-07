@@ -12,7 +12,7 @@ async function main() {
   });
   await Promise.all(dockerBuildPromises);
 
-  // await run('kubectl', ['apply', '-f', './k8s/*.yml']);
+  await run('kubectl', ['apply', '-f', './k8s/*.yml']);
 };
 
 function run(command, args, tag = "") {
@@ -30,11 +30,14 @@ function run(command, args, tag = "") {
 
 function discoverTargets(path, target){
   const dirents = fs.readdirSync(path, {withFileTypes: true});
-  const directories = dirents.filter((de) => de.isDirectory());
-  const dockerDirs = directories.filter((d) => {
-    return fs.readdirSync(d.name).filter((e) => e === target).length === 1;
+  const subdirs = dirents.filter((de) => de.isDirectory());
+
+  // Search subdirs to find all that contain a target file
+  const targetDirs = subdirs.filter((subdir) => {
+    //Subdir contains the target file
+    return fs.readdirSync(subdir.name).filter((entry) => entry === target).length === 1;
   }).map((e) => e.name);
-  return dockerDirs;
+  return targetDirs;
 }
 
 function prettyLog(data, prefix){
