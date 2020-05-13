@@ -1,6 +1,6 @@
 # Build stage 1
 # Install dependencies and build the code.
-FROM node:14-alpine AS appBuild
+FROM node:lts-alpine AS appBuild
 ENV INSTALL_PATH /usr/src/app
 RUN mkdir -p $INSTALL_PATH
 WORKDIR $INSTALL_PATH 
@@ -27,7 +27,7 @@ RUN npm install && npm run build && npm prune --production
 # RUN ls -lah
 # RUN du -h -d 1 .
 
-FROM node:14-alpine AS production
+FROM node:lts-alpine AS production
 ENV INSTALL_PATH /usr/src/app
 RUN mkdir -p $INSTALL_PATH
 COPY --from=appBuild $INSTALL_PATH $INSTALL_PATH
