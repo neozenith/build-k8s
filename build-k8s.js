@@ -8,17 +8,16 @@ async function main() {
   console.log(`Discovered Targets: ${targets}`);
 
   const dockerBuildPromises = targets.map((t) => {
-    return run('docker', ['build', '-t', `${t}:latest`, `./${t}`], t)
+    return run(`docker build --no-cache --build-arg NPM_TOKEN_ARG=$NPM_TOKEN -t ${t}:latest ./${t}`, t);
   });
-
   console.log(dockerBuildPromises);
   await Promise.all(dockerBuildPromises);
 
-  await run('kubectl', ['apply', '-f', './k8s/*.yml']);
+  await run(`kubectl apply -f ./k8s/*.yml`);
 
 };
 
-function run(command, args, tag = "") {
+function run(command, tag = "") {
   const fg = ansiColorFromHash(tag);
   const prefix = `${fg}[${tag}] stdout${C.Reset}:`;
   const ErrPrefix = `${C.BgRed}stderr${C.Reset}: `;
@@ -26,7 +25,7 @@ function run(command, args, tag = "") {
   return new Promise((resolve, reject) => {
 
     const done = (code, signal) =>  { resolve(code) };
-    const cmd = spawn(command, args);
+    const cmd = exec(command);
     cmd.on('error', reject);
     cmd.on('close', done);
     cmd.on('exit', done);
