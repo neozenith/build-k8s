@@ -13,6 +13,8 @@ async function main() {
   console.log(dockerBuildPromises);
   await Promise.all(dockerBuildPromises);
 
+  await run('docker image prune -f');
+
   await run(`kubectl apply -f ./k8s/*.yml`);
 
 };

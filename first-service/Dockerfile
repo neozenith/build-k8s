@@ -1,18 +1,18 @@
 # Build stage 1
 # Install dependencies and build the code.
-FROM node:10-alpine AS appBuild
+FROM node:14-alpine AS appBuild
 ENV INSTALL_PATH /usr/src/app
 RUN mkdir -p $INSTALL_PATH
 WORKDIR $INSTALL_PATH 
 
 # REQUIRED BUILD ARG
 # docker build --build-arg "NPM_TOKEN_ARG=$NPM_TOKEN" .
-ARG NPM_TOKEN_ARG
-ENV NPM_TOKEN=$NPM_TOKEN_ARG
+# ARG NPM_TOKEN_ARG
+# ENV NPM_TOKEN=$NPM_TOKEN_ARG
 # RUN echo "NPM_TOKEN: $NPM_TOKEN"
 
 # Everything needed to setup dependencies
-COPY .npmrc .
+# COPY .npmrc .
 COPY package.json .
 
 # COPY rest of code
@@ -27,7 +27,7 @@ RUN npm install && npm run build && npm prune --production
 # RUN ls -lah
 # RUN du -h -d 1 .
 
-FROM node:10-alpine AS production
+FROM node:14-alpine AS production
 ENV INSTALL_PATH /usr/src/app
 RUN mkdir -p $INSTALL_PATH
 COPY --from=appBuild $INSTALL_PATH $INSTALL_PATH
